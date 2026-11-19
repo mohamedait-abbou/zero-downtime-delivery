@@ -625,3 +625,68 @@ half-finished ones.
 | GHCR | GitHub's free container registry |
 | CI | automatic tests and build after a push |
 | GitOps | git is the source of truth; a controller applies it to the cluster |
+
+---
+
+## 11. Why CI? Why pytest?
+
+### The problem
+
+You change one line late at night, check `/health` once, and push. You forgot
+`/work?n=0`. The image is published and the cluster pulls it tomorrow. Users get
+a 500. Nothing was watching the change. Both tools exist to be that watcher.
+
+### Why pytest
+
+`pytest` is a test runner. It runs functions named `test_*` and returns an exit
+code: `0` = pass, non-zero = fail. Other tools can act on a number; a human
+reading your terminal cannot.
+
+| Manual `curl` | pytest |
+|---|---|
+| you must remember every check | written once, runs forever |
+| easy to skip when tired | never skips |
+| text you interpret | pass/fail number |
+| checks only right now | checks again after every future edit |
+
+`curl` is for **exploring** while building. Tests are for **protecting** what is
+already built.
+
+Each test freezes one promise:
+
+- `test_health` → 200 with `"status": "ok"`
+- `test_ready` → `{"ready": True}`
+- `test_work_ok` → `/work?n=5` processes 5
+- `test_work_rejects_zero` → `n=0` returns 400
+
+`assert` fails loudly on the exact line. That is a specification written in
+code. `TestClient` runs the app in memory: no port, no background process, no
+port conflicts.
+
+### Why CI
+
+CI = Continuous Integration: every time code changes, a robot checks it on a
+**clean machine**. "Continuous" = every push, not "when I remember".
+"Integration" = merge new code and verify the whole thing still works.
+
+Our two gates in `.github/workflows/ci.yaml`:
+
+- `needs: test` → no image unless tests passed.
+- `if: github.event_name == 'push'` → PRs are tested but cannot publish.
+
+A clean VM installs exactly `requirements.txt`. "It works on my laptop" is not
+proof; a fresh machine passing is reproducible proof.
+
+CI vs CD: CI tests, builds and publishes the image. CD (later, with ArgoCD)
+deploys it to the cluster.
+
+### How they fit
+
+| Tool | Role |
+|---|---|
+| pytest | the checklist |
+| GitHub Actions (CI) | the inspector who runs it every time |
+| GHCR | the shelf that holds only approved images |
+| ArgoCD (later) | the hands that run an approved image |
+
+CI cannot check what you did not write down. That is why the tests must be real.
