@@ -26,3 +26,17 @@ and the command.
   produced `(unhealthy)`; `docker inspect` showed
   `ConnectionRefusedError: [Errno 111]` on `127.0.0.1:8000`. The healthy
   container was unaffected.
+
+## 2026-11-19 — Day 2: worker + Docker Compose
+
+| Measurement | Value | Command |
+| --- | --- | --- |
+| services up | api (healthy) + worker (running) | `docker compose ps` |
+| worker HTTP status | 200 | `docker compose logs worker` |
+| startup order | api Waiting → Healthy → worker Starting | `docker compose up --build -d` output |
+| failure while api stopped | `URLError [Errno -3] Temporary failure in name resolution` | `docker compose stop api` + logs |
+| recovery | worker logged 200 again after `docker compose start api` | `docker compose logs worker` |
+
+Note: with the api container stopped, Docker's internal DNS no longer resolves the
+name `api`, hence Errno -3 instead of "connection refused". The worker did not
+crash and recovered on its own.
