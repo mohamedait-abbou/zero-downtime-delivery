@@ -5,6 +5,10 @@ Last updated: 2026-11-19
 Read this file when you come back. It explains everything we did up to now,
 what is real, and what is still not done. No magic, no hidden steps.
 
+How to use it: every step ends with **Test yourself**. Predict the answer
+first, run the command, then say the explanation out loud without looking.
+If you cannot explain it, reread that step.
+
 ---
 
 ## 0. The two folders (this caused confusion)
@@ -21,6 +25,8 @@ Files starting with a dot are hidden by default: `.gitignore`, `.dockerignore`,
 `.github/`, `.git/`. Enable "show hidden files" in the editor to see them.
 
 ---
+
+> **Test yourself (30 s):** run `pwd`. If it says `dockyard-course`, you are in the lessons folder. Type `cd ../delivery-platform` and `ls apps/api`. Say out loud: "lessons = read, project = build".
 
 ## 1. The big picture in one line
 
@@ -46,6 +52,8 @@ mkdir -p apps/api/app apps/api/tests
 
 `app/` = Python code. `tests/` = automatic checks. They are separate so tests
 can import the code cleanly.
+
+> **Test yourself (30 s):** `ls apps/api` → you should see `app` and `tests`. Say out loud why tests live in their own folder (clean imports and discovery).
 
 ### Step 2: `apps/api/app/main.py`
 
@@ -97,6 +105,8 @@ What the three doors mean:
 `os.getenv` reads a setting from outside the file. Same image, different
 settings — no rebuild needed.
 
+> **Test yourself (2 min):** before running anything, predict the HTTP code for `/work?n=0` and for `/health`. Start the app and check with `curl -s -o /dev/null -w '%{http_code}\n' 'localhost:8000/work?n=0'`. Say out loud: `/health` answers "alive?", `/ready` answers "can take traffic?".
+
 ### Step 3: `apps/api/requirements.txt`
 
 ```
@@ -109,6 +119,8 @@ httpx==0.28.1
 `==` = exactly this version. `latest` is dangerous because a build that worked
 yesterday can break tomorrow. `requirements-dev.txt` only contains
 `-r requirements.txt` for now.
+
+> **Test yourself (1 min):** run `grep fastapi requirements.txt` → `fastapi==0.115.6`. Answer: what does `==` protect against? (A newer release changing behaviour overnight.)
 
 ### Step 4: run it on the host (no Docker yet)
 
@@ -140,6 +152,8 @@ Real answers we saw:
 {"processed":3,"host":"mhd-laptop","version":"dev"}
 400
 ```
+
+> **Test yourself (2 min):** while uvicorn runs with `--host 0.0.0.0`, run `ss -ltn | grep 8000` — you see `0.0.0.0:8000`. Restart with `--host 127.0.0.1`; the line changes. Explain which one another container could reach and why.
 
 ### Step 5: `apps/api/tests/test_main.py`
 
@@ -174,6 +188,8 @@ def test_work_rejects_zero():
 `assert` means "if this is false, fail the test". `TestClient` calls the app in
 memory — no port needed.
 
+> **Test yourself (2 min):** change one `assert` so it expects `404`, run `.venv/bin/pytest -q`, read which test fails and on which line, then restore the file. Say what the failing assert was proving.
+
 ### Step 6: the error we hit and the fix
 
 `pytest -q` first failed:
@@ -192,6 +208,8 @@ pythonpath = .
 
 Result: **4 passed**. This file is now part of the repo, so the fix is
 reproducible for anyone who clones it.
+
+> **Test yourself (1 min):** rename `pytest.ini` to `pytest.ini.bak`, run pytest, read `ModuleNotFoundError` again, then restore. Explain what `pythonpath = .` adds.
 
 ### Step 7: `apps/api/Dockerfile`
 
@@ -241,6 +259,8 @@ a limited user, not root.
 `HEALTHCHECK`: Docker calls `/health` every 15 seconds. Three failures in a row
 → container shows `(unhealthy)`.
 
+> **Test yourself (2 min):** run `docker build -t dockyard-api:dev .` twice; find `CACHED` on the second run. Change one character in `app/main.py` and rebuild: what re-runs, what stays cached? Explain why `COPY requirements.txt` comes first.
+
 ### Step 8: `apps/api/.dockerignore`
 
 ```
@@ -253,6 +273,8 @@ tests
 
 Without this, your host `.venv` (with Python 3.14 packages) would be sent into
 a Python 3.12 image. Bad idea.
+
+> **Test yourself (1 min):** predict what would enter the image if `.venv` were not ignored. Check `docker images dockyard-api:dev --format '{{.Size}}'` and explain why host packages must stay out.
 
 ### Step 9: build, run, check
 
@@ -274,12 +296,16 @@ Small error we hit: `curl` exited with code 56 because it retried only
 connection-refused, not an empty reply. The app simply needed a second more to
 start. Repeating the call worked.
 
+> **Test yourself (2 min):** before reading output, predict `docker run --rm dockyard-api:dev whoami` and the `host` field of `curl -s 'localhost:8000/work?n=2'`. Expected: `appuser`, and a container ID rather than `mhd-laptop`. Explain why.
+
 ### Step 10: break test
 
 Started the same image with `sleep 3600` instead of uvicorn. Docker reported
 `(unhealthy)` and `docker inspect` showed `ConnectionRefusedError` on
 `127.0.0.1:8000`. The good container stayed `(healthy)`. Then the broken
 container was deleted.
+
+> **Test yourself (2 min):** do it yourself: `docker run -d --name test-broken --health-interval=2s --health-retries=2 --health-start-period=0s dockyard-api:dev sleep 3600`. Wait ~6 s, `docker ps --filter name=test-broken` → `(unhealthy)`, then `docker rm -f test-broken`. Predict the `docker inspect` error before looking.
 
 ---
 
@@ -319,6 +345,8 @@ while True:
 Only Python built-ins, so no `requirements.txt` for the worker. `try/except`
 means a failed call is logged, not fatal. `flush=True` makes logs appear live.
 
+> **Test yourself (2 min):** run `API_URL=http://localhost:8000 INTERVAL_S=1 python apps/worker/main.py` while the API container is up and count lines in 5 seconds (~5). Stop the API and watch `error ...` appear. Say why the loop did not die.
+
 ### `apps/worker/Dockerfile`
 
 ```dockerfile
@@ -338,6 +366,8 @@ CMD ["python", "main.py"]
 ```
 
 Same base image, same non-root user, no pip install. Simple and consistent.
+
+> **Test yourself (30 s):** `docker run --rm dockyard-worker:dev whoami` → `appuser`. Answer: why is there no `requirements.txt` for the worker?
 
 ### `compose.yaml` (repo root)
 
@@ -372,6 +402,8 @@ services:
 healthcheck to pass **before** starting the worker. Plain `depends_on` would
 only wait for "started", which is not the same as "ready".
 
+> **Test yourself (2 min):** imagine `condition: service_healthy` deleted — what race could happen? Now run `docker compose up --build -d` and find `Waiting → Healthy → Starting`. Explain what Compose waited for.
+
 ### Commands and real output
 
 ```bash
@@ -395,6 +427,8 @@ Worker logs:
 ok status=200 body={"processed":1,"host":"6725cedd5e57","version":"dev"}
 ```
 
+> **Test yourself (2 min):** `docker compose ps` shows two services. Which host port is published, to which service? Then `docker compose logs worker` shows `status=200`; explain what the container-ID `host` proves.
+
 ### Break and recover
 
 ```bash
@@ -409,6 +443,8 @@ While the API was stopped the worker logged
 That is Docker DNS: when the container stops, the name `api` no longer exists.
 After `docker compose start api`, the very next loop logged `ok status=200`
 again. The worker was never restarted.
+
+> **Test yourself (2 min):** stop the API, predict the exact error text before reading logs; start it and predict whether the worker needs a restart. Check both. Expected: DNS error, no restart needed.
 
 ---
 
@@ -477,6 +513,8 @@ Plain meaning:
   We did not store any secret in the repo.
 
 **This has never run.** There is no GitHub remote and no `gh` CLI installed.
+
+> **Test yourself (2 min):** in `ci.yaml`, point to (1) the line blocking PR publishing, (2) the line blocking publishing when tests fail, (3) the two image tags. Say why the SHA tag is the one to deploy.
 
 ---
 
