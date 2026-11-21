@@ -588,9 +588,10 @@ committed.
 
 ## 9. Next moves, in order
 
-1. **Connect GitHub.** Create an empty repo on github.com, then:
+1. **Connect GitHub.** Create an empty public repo named
+   `zero-downtime-delivery` (no README, no license), then:
    ```bash
-   git remote add origin <your-repo-url>
+   git remote add origin https://github.com/mohamedait-abbou/zero-downtime-delivery.git
    git push -u origin main
    ```
    Open the Actions tab and watch `test` then `image` run. This is the first

@@ -1,7 +1,7 @@
-# AGENTS.md — Dockyard delivery platform
+# AGENTS.md — zero-downtime-delivery platform
 
 ## Purpose
-This folder is the **Dockyard** project: a €0 zero-downtime delivery platform
+This folder is the **zero-downtime-delivery** project (codename **Dockyard**): a €0 zero-downtime delivery platform
 (3 services + status page) demonstrating containers, CI/CD, Kubernetes (kind),
 GitOps (ArgoCD), canary releases with auto-rollback, and observability.
 

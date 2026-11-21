@@ -1,4 +1,12 @@
-# Dockyard — a zero-downtime delivery platform
+# Zero-downtime delivery platform
+
+**GitHub repo:** [`zero-downtime-delivery`](https://github.com/mohamedait-abbou/zero-downtime-delivery) (project codename: Dockyard).
+
+**Description for the GitHub "About" field:**
+
+> Zero-downtime delivery platform: push a bad image, the canary fails and the old version keeps serving. FastAPI, Docker Compose, GitHub Actions → GHCR, kind, Helm, ArgoCD, Prometheus/Grafana/Loki.
+
+**Topics:** `devops` · `kubernetes` · `gitops` · `argocd` · `github-actions` · `prometheus` · `grafana` · `kind` · `helm` · `fastapi` · `canary-release`
 
 One repository that takes three services from `git push` to a running cluster
 with health checks, canary releases, automatic rollback and real observability.
