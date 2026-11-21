@@ -563,6 +563,7 @@ File: `docs/measurements.md`. Date: 2026-11-19.
 ## 7. Git checkpoints
 
 ```
+0d86f01 docs: align project naming with zero-downtime-delivery repo
 24c60d2 ci: test then build and push SHA-tagged image to GHCR
 d3f9388 worker: loop calling api; compose with health-gated startup
 82ba027 api: health, ready and work endpoints in a non-root container
@@ -575,9 +576,7 @@ committed.
 
 ## 8. What is NOT done (honest list)
 
-- No GitHub repository is linked (`git remote -v` is empty).
-- `gh` CLI is not installed; no push was attempted.
-- The Actions workflow has never executed.
+- `gh` CLI is not installed; we pushed over SSH and checked GitHub with the public API instead.
 - `kind` and `kubectl` are not installed. No Kubernetes cluster exists.
 - No Helm, ArgoCD, Prometheus, Grafana or Loki yet.
 - No Trivy scan, Syft SBOM or cosign signing yet.
@@ -588,20 +587,15 @@ committed.
 
 ## 9. Next moves, in order
 
-1. **Connect GitHub.** Create an empty public repo named
-   `zero-downtime-delivery` (no README, no license), then:
-   ```bash
-   git remote add origin https://github.com/mohamedait-abbou/zero-downtime-delivery.git
-   git push -u origin main
-   ```
-   Open the Actions tab and watch `test` then `image` run. This is the first
-   real proof that CI works.
-2. **Day 5:** add Trivy (CVE scan) and Syft (SBOM) to the workflow and run both
-   locally first.
+1. **DONE 2026-11-21 — Connect GitHub and prove CI.** Repo
+   `zero-downtime-delivery` created, `main` pushed over SSH, Actions run #1
+   passed both jobs, and the SHA-tagged image is in GHCR. Details in
+   `docs/measurements.md`.
+2. **Score the 18/20 readiness check** honestly (`~/dockyard-course/16-READINESS-CHECK.md`).
 3. **Week 2:** install `kind`, `kubectl`, `helm`; create a cluster; write the
    Helm chart; add probes and resources; install ArgoCD; let git deploy.
 4. **Week 3:** `/metrics`, Prometheus/Grafana/Loki, canary + auto-rollback.
-5. **Week 4:** signing, hardening, runbook, rebuild-from-zero demo, README with
+5. **Week 4:** Trivy/Syft/cosign, runbook, rebuild-from-zero demo, README with
    real numbers only.
 
 Do not jump to week 3 before week 2 works. One finished project beats five

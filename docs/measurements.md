@@ -40,3 +40,27 @@ and the command.
 Note: with the api container stopped, Docker's internal DNS no longer resolves the
 name `api`, hence Errno -3 instead of "connection refused". The worker did not
 crash and recovered on its own.
+
+## 2026-11-21 — Week 1 complete: CI ran on GitHub
+
+| Measurement | Value | Source |
+| --- | --- | --- |
+| repo | `github.com/mohamedait-abbou/zero-downtime-delivery` (public) | `git remote -v`, repo page |
+| remote | `git@github.com:mohamedait-abbou/zero-downtime-delivery.git` (SSH) | SSH auth test: "successfully authenticated" |
+| pushed commits | 7, branch `main`, head `0d86f01` | `git push -u origin main` |
+| Actions run | #1, `ci`, event `push`, conclusion **success** | `https://github.com/mohamedait-abbou/zero-downtime-delivery/actions/runs/44900453338` |
+| `test` job | completed **success** | GitHub Actions API `/jobs` |
+| `image` job | completed **success** | GitHub Actions API `/jobs` |
+| GHCR package | `ghcr.io/mohamedait-abbou/zero-downtime-delivery/api`, public | package page |
+| tags published | `latest` and `0d86f01b65990f9eb9dae7620604c853d741be06` | package page |
+| digest | `sha256:973bf5223c092c7b33eea1e865ee2dbe905c9faab3e7171bacfd1ae814b5a9c0` | package page |
+
+Commands used to verify (public API, no token needed):
+
+```bash
+curl -s https://api.github.com/repos/mohamedait-abbou/zero-downtime-delivery/actions/runs | jq '.workflow_runs[0] | {run_number,status,conclusion,head_sha}'
+curl -s https://api.github.com/repos/mohamedait-abbou/zero-downtime-delivery/actions/runs/44900453338/jobs | jq -r '.jobs[] | "\(.name): \(.status) \(.conclusion)"'
+```
+
+Note: the Actions HTML page briefly showed "0 workflow runs" while the API already
+reported the run as `in_progress`. The API is the reliable check here.
